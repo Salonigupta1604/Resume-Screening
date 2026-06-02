@@ -504,7 +504,7 @@ else:
                 cursor.execute("""
                 INSERT INTO jobs
                 (title, description)
-                VALUES (%S, %s)
+                VALUES (%s, %s)
                 """, (
                     title,
                     description
