@@ -596,6 +596,11 @@ else:
                     """, (job_id,))
 
                     applications = cursor.fetchall()
+                    st.write("Applications Found:", len(applications))
+                    if len(applications) == 0:
+                         st.warning("⚠️ No resumes submitted for this job.")
+                         conn.close()
+                         st.stop()
 
                     cursor.execute("""
                     SELECT description
@@ -619,6 +624,7 @@ else:
                             resume_text,
                             job_description
                         )
+                        st.write("AI Result:", result)
 
                         score = result["match_score"]
                         reasoning = result["reasoning"]
@@ -642,10 +648,10 @@ else:
                             app_id
                         ))
 
-                        progress.progress(
-                            (i + 1) / len(applications)
-                        )
-
+                        if len(applications) > 0:
+                            progress.progress(
+                                min((i + 1) / len(applications), 1.0)
+                                )
                     conn.commit()
                     conn.close()
 
