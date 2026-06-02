@@ -1,20 +1,13 @@
-import os
 import psycopg2
 import streamlit as st
 
 def connect_db():
-
     return psycopg2.connect(
-        host=st.secrets["DB_HOST"],
-        database=st.secrets["DB_NAME"],
-        user=st.secrets["DB_USER"],
-        password=st.secrets["DB_PASSWORD"],
-        port=st.secrets["DB_PORT"],
+        st.secrets["postgresql://resume_admin1234:c1IzNdMNO7LxsLTa1FoI56xI4W6qLUqC@dpg-d8fd2f58nd3s73fmjpn0-a.ohio-postgres.render.com/resume_12345"],
         sslmode="require"
     )
 
 def init_db():
-
     conn = connect_db()
     cursor = conn.cursor()
 
@@ -49,4 +42,3 @@ def init_db():
 
     conn.commit()
     conn.close()
-    
