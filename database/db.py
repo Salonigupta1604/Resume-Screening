@@ -3,7 +3,7 @@ import streamlit as st
 
 def connect_db():
     return psycopg2.connect(
-        st.secrets["postgresql://resume_admin1234:c1IzNdMNO7LxsLTa1FoI56xI4W6qLUqC@dpg-d8fd2f58nd3s73fmjpn0-a.ohio-postgres.render.com/resume_12345"],
+        st.secrets["DATABASE_URL"],
         sslmode="require"
     )
 
