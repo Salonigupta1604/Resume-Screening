@@ -504,7 +504,7 @@ else:
                 cursor.execute("""
                 INSERT INTO jobs
                 (title, description)
-                VALUES (?, ?)
+                VALUES (%S, %s)
                 """, (
                     title,
                     description
@@ -592,20 +592,15 @@ else:
                            applicant_name,
                            resume_text
                     FROM applications
-                    WHERE job_id=?
+                    WHERE job_id=%s
                     """, (job_id,))
 
                     applications = cursor.fetchall()
-                    st.write("Applications Found:", len(applications))
-                    if len(applications) == 0:
-                         st.warning("⚠️ No resumes submitted for this job.")
-                         conn.close()
-                         st.stop()
 
                     cursor.execute("""
                     SELECT description
                     FROM jobs
-                    WHERE id=?
+                    WHERE id=%s
                     """, (job_id,))
 
                     job_description = cursor.fetchone()[0]
@@ -624,7 +619,6 @@ else:
                             resume_text,
                             job_description
                         )
-                        st.write("AI Result:", result)
 
                         score = result["match_score"]
                         reasoning = result["reasoning"]
@@ -637,10 +631,10 @@ else:
 
                         cursor.execute("""
                         UPDATE applications
-                        SET score=?,
-                            reasoning=?,
-                            status=?
-                        WHERE id=?
+                        SET score=%s,
+                            reasoning=%s,
+                            status=%s
+                        WHERE id=%s
                         """, (
                             score,
                             reasoning,
@@ -648,10 +642,10 @@ else:
                             app_id
                         ))
 
-                        if len(applications) > 0:
-                            progress.progress(
-                                min((i + 1) / len(applications), 1.0)
-                                )
+                        progress.progress(
+                            (i + 1) / len(applications)
+                        )
+
                     conn.commit()
                     conn.close()
 
@@ -733,7 +727,7 @@ else:
                         resume_text,
                         job_id
                     )
-                    VALUES (?, ?, ?)
+                    VALUES (%s, %s, %s)
                     """, (
                         user["username"],
                         resume_text,

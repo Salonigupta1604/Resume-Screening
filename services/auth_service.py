@@ -11,7 +11,7 @@ def register_user(username, password, role):
 
     try:
         cursor.execute(
-            "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+            "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
             (username, hash_password(password), role)
         )
 
@@ -30,7 +30,7 @@ def login_user(username, password):
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT id, role, password FROM users WHERE username=?",
+        "SELECT id, role, password FROM users WHERE username=%s",
         (username,)
     )
 

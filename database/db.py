@@ -1,45 +1,51 @@
-import sqlite3
-
-DB_NAME = "database/recruiter.db"
+import os
+import psycopg2
+import streamlit as st
 
 def connect_db():
-    return sqlite3.connect(DB_NAME)
+
+    return psycopg2.connect(
+        host=st.secrets["DB_HOST"],
+        database=st.secrets["DB_NAME"],
+        user=st.secrets["DB_USER"],
+        password=st.secrets["DB_PASSWORD"],
+        port=st.secrets["DB_PORT"]
+    )
 
 def init_db():
+
     conn = connect_db()
     cursor = conn.cursor()
 
-    # USERS
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        role TEXT
+    CREATE TABLE IF NOT EXISTS users(
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100) UNIQUE,
+        password VARCHAR(255),
+        role VARCHAR(20)
     )
     """)
 
-    # JOBS
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS jobs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE IF NOT EXISTS jobs(
+        id SERIAL PRIMARY KEY,
         title TEXT,
         description TEXT
     )
     """)
 
-    # APPLICATIONS
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS applications (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE IF NOT EXISTS applications(
+        id SERIAL PRIMARY KEY,
         applicant_name TEXT,
         resume_text TEXT,
         job_id INTEGER,
         score INTEGER DEFAULT 0,
-        reasoning TEXT DEFAULT '',
+        reasoning TEXT,
         status TEXT DEFAULT 'Pending'
     )
     """)
 
     conn.commit()
     conn.close()
+    
