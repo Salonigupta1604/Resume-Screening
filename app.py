@@ -757,13 +757,13 @@ else:
         """)
         jobs = cursor.fetchall()     
         conn.close()
-
-    if jobs:
-
-        job_dict = {
-            f"{job[1]} - {job[2]}": job[0]
-            for job in jobs
-        }
+        
+        if jobs:
+            
+            job_dict = {
+                f"{job[1]} - {job[2]}": job[0]
+                for job in jobs
+            }
 
         st.markdown("<div class='card'>", unsafe_allow_html=True)
 
