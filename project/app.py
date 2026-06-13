@@ -412,15 +412,14 @@ else:
     )
 
     menu = st.sidebar.radio(
-    "Navigation",
-    [
-        "Dashboard",
-        "Jobs",
-        "Applications",
-        "AI Shortlisting",
-        "Resume Analyzer"
-    ]
-)
+        "Navigation",
+        [
+            "Dashboard",
+            "Jobs",
+            "Applications",
+            "AI Shortlisting"
+        ]
+    )
 
     if st.sidebar.button("Logout"):
         st.session_state.user = None
@@ -441,30 +440,18 @@ else:
             conn = connect_db()
             cursor = conn.cursor()
 
-            cursor.execute("""
-                           SELECT COUNT(*)
-                           FROM jobs
-                           WHERE recruiter_id=%s
-                           """,(user["id"],))
+            cursor.execute("SELECT COUNT(*) FROM jobs")
             total_jobs = cursor.fetchone()[0]
 
             cursor.execute("SELECT COUNT(*) FROM applications")
             total_apps = cursor.fetchone()[0]
 
             cursor.execute("""
-                           SELECT COUNT(*)
-                           FROM applications
-                           WHERE recruiter_id=%s
-                           """,(user["id"],))
+            SELECT COUNT(*)
+            FROM applications
+            WHERE status='Shortlisted'
+            """)
 
-            shortlisted = cursor.fetchone()[0]
-
-            cursor.execute("""
-                           SELECT COUNT(*)
-                           FROM applications
-                           WHERE recruiter_id=%s
-                           AND status='Shortlisted'
-                           """,(user["id"],))
             shortlisted = cursor.fetchone()[0]
 
             conn.close()
@@ -503,10 +490,6 @@ else:
 
             st.markdown("<div class='card'>", unsafe_allow_html=True)
 
-            company_name = st.text_input(
-                "Company Name"
-            )
-
             title = st.text_input("Job Title")
 
             description = st.text_area(
@@ -519,19 +502,13 @@ else:
                 cursor = conn.cursor()
 
                 cursor.execute("""
-                               INSERT INTO jobs(
-                               recruiter_id,
-                               company_name,
-                               title,
-                               description
-                               )
-                               VALUES(%s,%s,%s,%s)
-                               """,(
-                                   user["id"],
-                                   company_name,
-                                   title,
-                                   description
-                                   ))
+                INSERT INTO jobs
+                (title, description)
+                VALUES (%s, %s)
+                """, (
+                    title,
+                    description
+                ))
 
                 conn.commit()
                 conn.close()
@@ -550,12 +527,11 @@ else:
             cursor = conn.cursor()
 
             cursor.execute("""
-                           SELECT applicant_name,
-                           score,
-                           status
-                           FROM applications
-                           WHERE recruiter_id=%s
-                           """,(user["id"],))
+            SELECT applicant_name,
+                   score,
+                   status
+            FROM applications
+            """)
 
             data = cursor.fetchall()
 
@@ -589,11 +565,9 @@ else:
             conn = connect_db()
             cursor = conn.cursor()
 
-            cursor.execute("""
-                           SELECT id,title
-                           FROM jobs
-                           WHERE recruiter_id=%s
-                           """,(user["id"],))
+            cursor.execute(
+                "SELECT id, title FROM jobs"
+            )
 
             jobs = cursor.fetchall()
 
@@ -697,161 +671,77 @@ else:
             else:
                 st.warning("No jobs available")
 
-       # =====================================================
-       # RESUME ANALYZER
-       # =====================================================
-                
-        elif menu == "Resume Analyzer":
-            
-            st.title("📄 Resume Analyzer")
-
-    uploaded_resume = st.file_uploader(
-        "Upload Resume",
-        type=["pdf"]
-    )
-
-    jd = st.text_area(
-        "Paste Job Description"
-    )
-
-    if st.button("Analyze Resume"):
-
-        if uploaded_resume and jd:
-
-            resume_text = extract_text_from_pdf(
-                uploaded_resume
-            )
-
-            result = analyze_resume(
-                resume_text,
-                jd
-            )
-
-            st.metric(
-                "Match Score",
-                f"{result['match_score']}%"
-            )
-
-            st.write(
-                result["reasoning"]
-            )
-
-# =====================================================
-# APPLICANT PANEL
-# =====================================================
+    # =====================================================
+    # APPLICANT PANEL
+    # =====================================================
 
     else:
 
-     st.title("👨‍🎓 Applicant Dashboard")
+        st.title("👨‍🎓 Applicant Dashboard")
 
-    conn = connect_db()
-    cursor = conn.cursor()
+        conn = connect_db()
+        cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT id, title FROM jobs"
-    )
-
-    jobs = cursor.fetchall()
-
-    conn.close()
-
-    if jobs:
-
-        job_dict = {
-            job[1]: job[0]
-            for job in jobs
-        }
-
-        st.markdown("<div class='card'>", unsafe_allow_html=True)
-
-        apply_mode = st.radio(
-            "Application Type",
-            [
-                "Single Company",
-                "All Companies"
-            ]
+        cursor.execute(
+            "SELECT id, title FROM jobs"
         )
 
-        selected_job = st.selectbox(
-            "Select Job",
-            list(job_dict.keys())
-        )
+        jobs = cursor.fetchall()
 
-        uploaded_file = st.file_uploader(
-            "Upload Resume PDF",
-            type=["pdf"]
-        )
+        conn.close()
 
-        if st.button("Apply Now"):
+        if jobs:
 
-            if uploaded_file:
+            job_dict = {
+                job[1]: job[0]
+                for job in jobs
+            }
 
-                resume_text = extract_text_from_pdf(
-                    uploaded_file
-                )
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
 
-                conn = connect_db()
-                cursor = conn.cursor()
+            selected_job = st.selectbox(
+                "Select Job",
+                list(job_dict.keys())
+            )
 
-                if apply_mode == "Single Company":
+            uploaded_file = st.file_uploader(
+                "Upload Resume PDF",
+                type=["pdf"]
+            )
+
+            if st.button("Apply Now"):
+
+                if uploaded_file:
+
+                    resume_text = extract_text_from_pdf(
+                        uploaded_file
+                    )
+
+                    conn = connect_db()
+                    cursor = conn.cursor()
 
                     cursor.execute("""
-                    SELECT recruiter_id
-                    FROM jobs
-                    WHERE id=%s
-                    """, (job_dict[selected_job],))
-
-                    recruiter_id = cursor.fetchone()[0]
-
-                    cursor.execute("""
-                    INSERT INTO applications(
+                    INSERT INTO applications
+                    (
                         applicant_name,
                         resume_text,
-                        job_id,
-                        recruiter_id
+                        job_id
                     )
-                    VALUES(%s,%s,%s,%s)
+                    VALUES (%s, %s, %s)
                     """, (
                         user["username"],
                         resume_text,
-                        job_dict[selected_job],
-                        recruiter_id
+                        job_dict[selected_job]
                     ))
 
-                else:
+                    conn.commit()
+                    conn.close()
 
-                    cursor.execute("""
-                    SELECT id,recruiter_id
-                    FROM jobs
-                    """)
+                    st.success(
+                        "✅ Application Submitted Successfully"
+                    )
 
-                    all_jobs = cursor.fetchall()
+            st.markdown("</div>", unsafe_allow_html=True)
 
-                    for job in all_jobs:
-
-                        cursor.execute("""
-                        INSERT INTO applications(
-                            applicant_name,
-                            resume_text,
-                            job_id,
-                            recruiter_id
-                        )
-                        VALUES(%s,%s,%s,%s)
-                        """, (
-                            user["username"],
-                            resume_text,
-                            job[0],
-                            job[1]
-                        ))
-
-                conn.commit()
-                conn.close()
-
-                st.success(
-                    "✅ Application Submitted Successfully"
-                )
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    else:
-        st.warning("No jobs available")
+        else:
+            st.warning("No jobs available")

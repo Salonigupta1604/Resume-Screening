@@ -5,7 +5,6 @@ def connect_db():
     return psycopg2.connect(
         st.secrets["DATABASE_URL"],
         sslmode="require"
-        
     )
 
 def init_db():
@@ -24,8 +23,6 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS jobs(
         id SERIAL PRIMARY KEY,
-        recruiter_id INTEGER,
-        company_name TEXT,
         title TEXT,
         description TEXT
     )
@@ -37,33 +34,11 @@ def init_db():
         applicant_name TEXT,
         resume_text TEXT,
         job_id INTEGER,
-        recruiter_id INTEGER,
         score INTEGER DEFAULT 0,
         reasoning TEXT,
         status TEXT DEFAULT 'Pending'
     )
     """)
-
-    try:
-        cursor.execute(
-            "ALTER TABLE jobs ADD COLUMN recruiter_id INTEGER"
-        )
-    except:
-        pass
-
-    try:
-        cursor.execute(
-            "ALTER TABLE jobs ADD COLUMN company_name TEXT"
-        )
-    except:
-        pass
-
-    try:
-        cursor.execute(
-            "ALTER TABLE applications ADD COLUMN recruiter_id INTEGER"
-        )
-    except:
-        pass
 
     conn.commit()
     conn.close()
