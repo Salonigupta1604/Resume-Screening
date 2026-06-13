@@ -410,17 +410,22 @@ else:
     st.sidebar.success(
         f"{user['username']} ({user['role']})"
     )
-
-    menu = st.sidebar.radio(
-    "Navigation",
-    [
-        "Dashboard",
-        "Jobs",
-        "Applications",
-        "AI Shortlisting",
-        "Resume Analyzer"
-    ]
-)
+    if user["role"] == "admin":
+        menu = st.sidebar.radio(
+        "Navigation",
+        [
+            "Dashboard",
+            "Jobs",
+            "Applications",
+            "AI Shortlisting",
+            "Resume Analyzer"
+        ]
+    )
+    else:
+        menu = st.sidebar.radio(
+        "Navigation",
+        ["Apply Job"]
+    )
 
     if st.sidebar.button("Logout"):
         st.session_state.user = None
@@ -448,7 +453,11 @@ else:
                            """,(user["id"],))
             total_jobs = cursor.fetchone()[0]
 
-            cursor.execute("SELECT COUNT(*) FROM applications")
+            cursor.execute("""
+                           SELECT COUNT(*)
+                           FROM applications
+                           WHERE recruiter_id=%s
+                           """,(user["id"],))
             total_apps = cursor.fetchone()[0]
 
             cursor.execute("""
@@ -704,37 +713,31 @@ else:
         elif menu == "Resume Analyzer":
             
             st.title("📄 Resume Analyzer")
-
-    uploaded_resume = st.file_uploader(
-        "Upload Resume",
-        type=["pdf"]
-    )
-
-    jd = st.text_area(
-        "Paste Job Description"
-    )
-
-    if st.button("Analyze Resume"):
-
-        if uploaded_resume and jd:
-
-            resume_text = extract_text_from_pdf(
-                uploaded_resume
+            uploaded_resume = st.file_uploader(
+                "Upload Resume",
+                type=["pdf"]
             )
-
-            result = analyze_resume(
-                resume_text,
-                jd
+            
+            jd = st.text_area(
+                "Paste Job Description"
             )
+            if st.button("Analyze Resume"):
+                if uploaded_resume and jd:
+                    resume_text = extract_text_from_pdf(
+                        uploaded_resume
+                    )
+                    
+                    result = analyze_resume(
+                        resume_text,
+                        jd
+                    )
 
-            st.metric(
-                "Match Score",
-                f"{result['match_score']}%"
-            )
-
-            st.write(
-                result["reasoning"]
-            )
+                    st.metric(
+                        "Match Score",
+                        f"{result['match_score']}%"
+                    )
+                    
+                    st.write(result["reasoning"])
 
 # =====================================================
 # APPLICANT PANEL
@@ -744,12 +747,15 @@ else:
 
      st.title("👨‍🎓 Applicant Dashboard")
 
-    conn = connect_db()
-    cursor = conn.cursor()
+     conn = connect_db()
+     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT id, title FROM jobs"
-    )
+    cursor.execute("""
+    SELECT id,
+           company_name,
+           title
+    FROM jobs
+    """)
 
     jobs = cursor.fetchall()
 
@@ -758,7 +764,7 @@ else:
     if jobs:
 
         job_dict = {
-            job[1]: job[0]
+            f"{job[1]} - {job[2]}": job[0]
             for job in jobs
         }
 
