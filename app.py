@@ -744,22 +744,19 @@ else:
 # =====================================================
 
     else:
-
-     st.title("👨‍🎓 Applicant Dashboard")
-
-     conn = connect_db()
-     cursor = conn.cursor()
-
-    cursor.execute("""
-    SELECT id,
-           company_name,
-           title
-    FROM jobs
-    """)
-
-    jobs = cursor.fetchall()
-
-    conn.close()
+        st.title("👨‍🎓 Applicant Dashboard")
+        
+        conn = connect_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+        SELECT id,
+             company_name,
+             title
+        FROM jobs
+        """)
+        jobs = cursor.fetchall()     
+        conn.close()
 
     if jobs:
 
